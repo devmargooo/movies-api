@@ -1,8 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 
 const app = express();
 const PORT = 3030;
 const HOST = 'localhost';
+
+app.use(cors());
 
 const MOVIES = [
   { id: 1, title: 'The Godfather' },
