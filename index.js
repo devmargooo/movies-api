@@ -6,6 +6,10 @@ const PORT = 3030;
 const HOST = 'localhost';
 
 app.use(cors());
+app.use((req, res, next) => {
+  const delay = Math.floor(Math.random() * 401) + 800;
+  setTimeout(next, delay);
+});
 
 const MOVIES = [
   { id: 1, title: 'The Godfather' },
