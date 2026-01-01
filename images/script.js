@@ -1,18 +1,10 @@
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-const PORT = 3030;
-const HOST = 'localhost';
-
-app.use(cors());
-app.use((req, res, next) => {
-  const delay = Math.floor(Math.random() * 401) + 800;
-  setTimeout(next, delay);
-});
+const fs = require('fs');
+const path = require('path');
+const dns = require('node:dns');
+dns.setDefaultResultOrder('verbatim'); // Node будет использовать обычный порядок из OS
 
 const movies = [
-  { id: 1, title: 'The Godfather', hit: false },
+  //   { id: 1, title: 'The Godfather', hit: false },
   { id: 2, title: 'The Shawshank Redemption', hit: false },
   { id: 3, title: "Schindler's List", hit: false },
   { id: 4, title: 'Raging Bull', hit: false },
@@ -126,21 +118,70 @@ const movies = [
   { id: 100, title: 'WALL·E', hit: false },
 ];
 
-app.get('/movies', (req, res) => {
-  const search = String(req.query.search || '')
-    .trim()
-    .toLowerCase();
+const TMDB_API_KEY = '2fb6d8509793f970895765f1b2a310c7';
+const SEARCH_URL = 'https://api.themoviedb.org/3/search/movie';
+const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-  if (!search) {
-    return res.json(movies);
+if (!TMDB_API_KEY) {
+  console.log('❌ TMDB_API_KEY is not set');
+  process.exit(1);
+}
+
+/**
+ * Поиск фильма в TMDB
+ * @param {string} title
+ */
+async function searchMovie(title) {
+  const url = `${SEARCH_URL}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+    title
+  )}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`TMDB search failed: ${response.status}`);
+    const data = await response.json();
+    return data.results?.[0] || null;
+  } catch (err) {
+    console.log(`❌ Fetch error for "${title}":`, err.message);
+    return null;
   }
+}
 
-  const filtered = movies.filter((m) => m.title.toLowerCase().includes(search));
-  return res.json(filtered);
-});
+/**
+ * Загрузка постера
+ */
+async function downloadImage(url, filePath) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`Image download failed: ${response.status}`);
+    const buffer = await response.arrayBuffer();
+    fs.writeFileSync(filePath, Buffer.from(buffer));
+  } catch (err) {
+    console.log(`❌ Failed to download image from "${url}":`, err.message);
+  }
+}
 
-app.listen(PORT, HOST, () => {
-  console.log(`Server is running at http://${HOST}:${PORT}`);
-});
+/**
+ * Основной запуск
+ */
+async function run() {
+  for (const movie of movies) {
+    try {
+      console.log(`🔍 Searching poster for: ${movie.title}`);
+      const result = await searchMovie(movie.title);
+      if (!result || !result.poster_path) {
+        console.warn(`⚠️ Poster not found: ${movie.title}`);
+        continue;
+      }
+      const posterUrl = `${IMAGE_BASE_URL}${result.poster_path}`;
+      const filePath = path.join(__dirname, `${movie.id}.jpg`);
+      await downloadImage(posterUrl, filePath);
+      console.log(`✅ Saved: ${movie.id}.jpg`);
+    } catch (err) {
+      console.log(err);
+      console.log(`❌ Error for "${movie.title}":`, err.message);
+    }
+  }
+}
 
-module.exports = movies;
+run();
