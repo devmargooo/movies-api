@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = 3030;
@@ -137,6 +138,18 @@ app.get('/movies', (req, res) => {
 
   const filtered = movies.filter((m) => m.title.toLowerCase().includes(search));
   return res.json(filtered);
+});
+
+app.get('/movie/:id/poster', (req, res) => {
+  const { id } = req.params;
+  const filePath = path.join(__dirname, 'images', `${id}.jpg`);
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(404).send('Poster not found');
+    }
+  });
 });
 
 app.listen(PORT, HOST, () => {
