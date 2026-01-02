@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3030;
@@ -141,15 +142,13 @@ app.get('/movies', (req, res) => {
 });
 
 app.get('/movie/:id/poster', (req, res) => {
-  const { id } = req.params;
-  const filePath = path.join(__dirname, 'images', `${id}.jpg`);
+  const filePath = path.join(__dirname, 'images', `${req.params.id}.jpg`);
 
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(404).send('Poster not found');
-    }
-  });
+  res.type('jpg');
+
+  fs.createReadStream(filePath)
+    .on('error', () => res.sendStatus(404))
+    .pipe(res);
 });
 
 app.listen(PORT, HOST, () => {
