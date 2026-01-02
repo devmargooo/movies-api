@@ -8,6 +8,7 @@ const PORT = 3030;
 const HOST = 'localhost';
 
 app.use(cors());
+app.use(express.json());
 app.use((req, res, next) => {
   const delay = Math.floor(Math.random() * 401) + 800;
   setTimeout(next, delay);
@@ -149,6 +150,47 @@ app.get('/movie/:id/poster', (req, res) => {
   fs.createReadStream(filePath)
     .on('error', () => res.sendStatus(404))
     .pipe(res);
+});
+
+app.post('/purchase', (req, res) => {
+  if (!req.body) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Неверный формат данных',
+    });
+  }
+  const { ids, amount } = req.body;
+
+  // базовая валидация
+  if (!Array.isArray(ids) || typeof amount !== 'number') {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Неверный формат данных',
+    });
+  }
+
+  const randomResult = Math.floor(Math.random() * 4);
+
+  switch (randomResult) {
+    case 0:
+    case 1:
+      return res.status(200).json({
+        status: 'ok',
+      });
+
+    case 1:
+      return res.status(402).json({
+        status: 'error',
+        message: 'не хватает средств',
+      });
+
+    case 2:
+    default:
+      return res.status(500).json({
+        status: 'error',
+        message: 'неизвестная ошибка',
+      });
+  }
 });
 
 app.listen(PORT, HOST, () => {
