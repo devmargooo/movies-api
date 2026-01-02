@@ -129,6 +129,21 @@ const movies = [
   { id: 100, title: 'WALL·E', hit: false },
 ];
 
+const GENRES = [
+  { id: 1, name: 'Драма' },
+  { id: 2, name: 'Комедия' },
+  { id: 3, name: 'Боевик' },
+  { id: 4, name: 'Триллер' },
+  { id: 5, name: 'Ужасы' },
+  { id: 6, name: 'Фантастика' },
+  { id: 7, name: 'Романтика' },
+  { id: 8, name: 'Детектив' },
+  { id: 9, name: 'Приключения' },
+  { id: 10, name: 'Анимация' },
+  { id: 11, name: 'Документальный' },
+  { id: 12, name: 'Вестерн' },
+];
+
 app.get('/movies', (req, res) => {
   const search = String(req.query.search || '')
     .trim()
@@ -191,6 +206,13 @@ app.post('/purchase', (req, res) => {
         message: 'неизвестная ошибка',
       });
   }
+});
+
+app.get('/profile', (_, res) => {
+  return res.json({
+    name: 'Иннокентий',
+    genres: [1, 2],
+  });
 });
 
 app.listen(PORT, HOST, () => {
