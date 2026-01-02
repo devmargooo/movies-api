@@ -193,13 +193,13 @@ app.post('/purchase', (req, res) => {
         status: 'ok',
       });
 
-    case 1:
+    case 2:
       return res.status(402).json({
         status: 'error',
         message: 'не хватает средств',
       });
 
-    case 2:
+    case 3:
     default:
       return res.status(500).json({
         status: 'error',
@@ -208,11 +208,53 @@ app.post('/purchase', (req, res) => {
   }
 });
 
+const profile = {
+  name: 'Иннокентий',
+  genres: [1, 2],
+};
+
 app.get('/profile', (_, res) => {
-  return res.json({
-    name: 'Иннокентий',
-    genres: [1, 2],
-  });
+  return res.json(profile);
+});
+
+// 1. PUT /name — изменить имя
+app.put('/name', (req, res) => {
+  const { name } = req.body;
+
+  if (!name || typeof name !== 'string') {
+    return res.status(400).json({ error: 'Неверное имя' });
+  }
+
+  profile.name = name;
+  return res.json({ message: 'Имя обновлено' });
+});
+
+// 2. POST /favorite — добавить жанр
+app.post('/favorite', (req, res) => {
+  const { genre } = req.body;
+
+  if (!genre || typeof genre !== 'number') {
+    return res.status(400).json({ error: 'Неверный жанр' });
+  }
+
+  if (!profile.genres.includes(genre)) {
+    profile.genres.push(genre);
+  }
+
+  return res.json({ message: 'Жанр добавлен' });
+});
+
+// 3. DELETE /favorite — удалить жанр
+app.delete('/favorite', (req, res) => {
+  const { genre } = req.body;
+
+  if (!genre || typeof genre !== 'number') {
+    return res.status(400).json({ error: 'Неверный жанр' });
+  }
+
+  profile.genres = profile.genres.filter((g) => g !== genre);
+
+  return res.json({ message: 'Жанр удалён' });
 });
 
 app.listen(PORT, HOST, () => {
